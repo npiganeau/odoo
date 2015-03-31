@@ -1142,7 +1142,7 @@ class account_invoice(models.Model):
         else:
             ref = self.number
         partner = self.partner_id._find_accounting_partner(self.partner_id)
-        name = name or self.invoice_line.name or self.number
+        name = name or self.invoice_line[0].name or self.number
         # Pay attention to the sign for both debit/credit AND amount_currency
         l1 = {
             'name': name,
@@ -1349,7 +1349,7 @@ class account_invoice_line(models.Model):
         if type in ('in_invoice', 'in_refund'):
             values['price_unit'] = price_unit or product.standard_price
         else:
-            values['price_unit'] = product.list_price
+            values['price_unit'] = product.lst_price
 
         values['uos_id'] = uom_id or product.uom_id.id
         domain = {'uos_id': [('category_id', '=', product.uom_id.category_id.id)]}

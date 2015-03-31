@@ -161,7 +161,7 @@ class crm_lead(format_address, osv.osv):
 
     def fields_view_get(self, cr, user, view_id=None, view_type='form', context=None, toolbar=False, submenu=False):
         if context and context.get('opportunity_id'):
-            action = self._get_formview_action(cr, user, context['opportunity_id'], context=context)
+            action = self.get_formview_action(cr, user, context['opportunity_id'], context=context)
             if action.get('views') and any(view_id for view_id in action['views'] if view_id[1] == view_type):
                 view_id = next(view_id[0] for view_id in action['views'] if view_id[1] == view_type)
         res = super(crm_lead, self).fields_view_get(cr, user, view_id, view_type, context, toolbar=toolbar, submenu=submenu)
@@ -313,6 +313,7 @@ class crm_lead(format_address, osv.osv):
             values = {
                 'partner_name': partner.parent_id.name if partner.parent_id else partner.name,
                 'contact_name': partner.name if partner.parent_id else False,
+                'title': partner.title and partner.title.id or False,
                 'street': partner.street,
                 'street2': partner.street2,
                 'city': partner.city,
@@ -323,6 +324,7 @@ class crm_lead(format_address, osv.osv):
                 'mobile': partner.mobile,
                 'fax': partner.fax,
                 'zip': partner.zip,
+                'function': partner.function,
             }
         return {'value': values}
 
