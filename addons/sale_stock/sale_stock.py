@@ -374,7 +374,7 @@ class stock_move(osv.osv):
         if move.procurement_id and move.procurement_id.sale_line_id and move.procurement_id.sale_line_id.order_id.order_policy == 'picking':
             sale_order = move.procurement_id.sale_line_id.order_id
             return sale_order.partner_invoice_id, sale_order.user_id.id, sale_order.pricelist_id.currency_id.id
-        elif move.picking_id.sale_id:
+        elif move.picking_id.sale_id and context.get('inv_type') == 'out_invoice':
             # In case of extra move, it is better to use the same data as the original moves
             sale_order = move.picking_id.sale_id
             return sale_order.partner_invoice_id, sale_order.user_id.id, sale_order.pricelist_id.currency_id.id
@@ -397,6 +397,14 @@ class stock_move(osv.osv):
             uos_coeff = move.product_uom_qty and move.product_uos_qty / move.product_uom_qty or 1.0
             res['price_unit'] = res['price_unit'] / uos_coeff
         return res
+
+    def _get_moves_taxes(self, cr, uid, moves, context=None):
+        is_extra_move, extra_move_tax = super(stock_move, self)._get_moves_taxes(cr, uid, moves, context=context)
+        for move in moves:
+            if move.procurement_id and move.procurement_id.sale_line_id:
+                is_extra_move[move.id] = False
+                extra_move_tax[move.picking_id, move.product_id] = [(6, 0, [x.id for x in move.procurement_id.sale_line_id.tax_id])]
+        return (is_extra_move, extra_move_tax)
 
 
 class stock_location_route(osv.osv):

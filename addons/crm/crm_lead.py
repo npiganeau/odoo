@@ -388,7 +388,7 @@ class crm_lead(format_address, osv.osv):
         """
         stages_leads = {}
         for lead in self.browse(cr, uid, ids, context=context):
-            stage_id = self.stage_find(cr, uid, [lead], lead.section_id.id or False, [('probability', '=', 0.0), ('fold', '=', True), ('sequence', '>', 1)], context=context)
+            stage_id = self.stage_find(cr, uid, [lead], lead.section_id.id or False, [('probability', '=', 0.0), ('on_change', '=', True), ('sequence', '>', 1)], context=context)
             if stage_id:
                 if stages_leads.get(stage_id):
                     stages_leads[stage_id].append(lead.id)
@@ -408,7 +408,7 @@ class crm_lead(format_address, osv.osv):
         """
         stages_leads = {}
         for lead in self.browse(cr, uid, ids, context=context):
-            stage_id = self.stage_find(cr, uid, [lead], lead.section_id.id or False, [('probability', '=', 100.0), ('fold', '=', True)], context=context)
+            stage_id = self.stage_find(cr, uid, [lead], lead.section_id.id or False, [('probability', '=', 100.0), ('on_change', '=', True)], context=context)
             if stage_id:
                 if stages_leads.get(stage_id):
                     stages_leads[stage_id].append(lead.id)
@@ -883,6 +883,7 @@ class crm_lead(format_address, osv.osv):
                       (tree_view or False, 'tree'), (False, 'kanban'),
                       (False, 'calendar'), (False, 'graph')],
             'type': 'ir.actions.act_window',
+            'context': {'default_type': 'opportunity'}
         }
 
     def redirect_lead_view(self, cr, uid, lead_id, context=None):
@@ -1071,7 +1072,10 @@ class crm_lead(format_address, osv.osv):
             duration = _('unknown')
         else:
             duration = str(duration)
-        message = _("Meeting scheduled at '%s'<br> Subject: %s <br> Duration: %s hour(s)") % (meeting_date, meeting_subject, duration)
+        meet_date = datetime.strptime(meeting_date, tools.DEFAULT_SERVER_DATETIME_FORMAT)
+        meeting_usertime = fields.datetime.context_timestamp(cr, uid, meet_date, context=context).strftime(tools.DEFAULT_SERVER_DATETIME_FORMAT)
+        html_time = "<time datetime='%s+00:00'>%s</time>" % (meeting_date, meeting_usertime)
+        message = _("Meeting scheduled at '%s'<br> Subject: %s <br> Duration: %s hour(s)") % (html_time, meeting_subject, duration)
         return self.message_post(cr, uid, ids, body=message, context=context)
 
     def onchange_state(self, cr, uid, ids, state_id, context=None):
