@@ -1731,7 +1731,7 @@ class account_tax_code(osv.osv):
         res2 = {}
         for record in self.browse(cr, uid, ids, context=context):
             def _rec_get(record):
-                amount = res.get(record.id, 0.0)
+                amount = res.get(record.id) or 0.0
                 for rec in record.child_ids:
                     amount += _rec_get(rec) * rec.sign
                 return amount
@@ -2008,7 +2008,7 @@ class account_tax(osv.osv):
         for tax in taxes:
             # we compute the amount for the current tax object and append it to the result
             data = {'id':tax.id,
-                    'name':tax.description and tax.description + " - " + tax.name or tax.name,
+                    'name': tax.name,
                     'account_collected_id':tax.account_collected_id.id,
                     'account_paid_id':tax.account_paid_id.id,
                     'account_analytic_collected_id': tax.account_analytic_collected_id.id,
