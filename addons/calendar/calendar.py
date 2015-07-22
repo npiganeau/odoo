@@ -95,7 +95,7 @@ class calendar_attendee(osv.Model):
         'email': fields.char('Email', help="Email of Invited Person"),
         'availability': fields.selection([('free', 'Free'), ('busy', 'Busy')], 'Free/Busy', readonly="True"),
         'access_token': fields.char('Invitation Token'),
-        'event_id': fields.many2one('calendar.event', 'Meeting linked'),
+        'event_id': fields.many2one('calendar.event', 'Meeting linked', ondelete='cascade'),
     }
     _defaults = {
         'state': 'needsAction',
@@ -656,18 +656,18 @@ class ir_model(osv.Model):
 original_exp_report = openerp.service.report.exp_report
 
 
-def exp_report(db, uid, object, ids, data=None, context=None):
+def exp_report(db, uid, object, ids, datas=None, context=None):
     """
     Export Report
     """
     if object == 'printscreen.list':
-        original_exp_report(db, uid, object, ids, data, context)
+        original_exp_report(db, uid, object, ids, datas, context)
     new_ids = []
     for id in ids:
         new_ids.append(calendar_id2real_id(id))
-    if data.get('id', False):
-        data['id'] = calendar_id2real_id(data['id'])
-    return original_exp_report(db, uid, object, new_ids, data, context)
+    if datas.get('id', False):
+        datas['id'] = calendar_id2real_id(datas['id'])
+    return original_exp_report(db, uid, object, new_ids, datas, context)
 
 
 openerp.service.report.exp_report = exp_report
@@ -1662,12 +1662,6 @@ class calendar_event(osv.Model):
         virtual_id = context.get('virtual_id', True)
         context.update({'virtual_id': False})
         res = super(calendar_event, self).read_group(cr, uid, domain, fields, groupby, offset=offset, limit=limit, context=context, orderby=orderby, lazy=lazy)
-        for result in res:
-            #remove the count, since the value is not consistent with the result of the search when expand the group
-            for groupname in groupby:
-                if result.get(groupname + "_count"):
-                    del result[groupname + "_count"]
-            result.get('__context', {}).update({'virtual_id': virtual_id})
         return res
 
     def read(self, cr, uid, ids, fields=None, context=None, load='_classic_read'):
